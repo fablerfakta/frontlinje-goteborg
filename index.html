@@ -15,6 +15,11 @@
 <meta name="theme-color" content="#1a1d20">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20512%20512%22%3E%20%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%2296%22%20fill%3D%22%231a1d20%22/%3E%20%3Ccircle%20cx%3D%22256%22%20cy%3D%22256%22%20r%3D%22188%22%20fill%3D%22none%22%20stroke%3D%22%23f0b440%22%20stroke-width%3D%2220%22/%3E%20%3Ccircle%20cx%3D%22256%22%20cy%3D%22256%22%20r%3D%22150%22%20fill%3D%22%2322272c%22/%3E%20%3Cg%20stroke%3D%22%23f0b440%22%20stroke-width%3D%2216%22%20stroke-linecap%3D%22round%22%3E%20%3Cpath%20d%3D%22M256%2040V96M256%20416V472M40%20256H96M416%20256H472%22/%3E%20%3C/g%3E%20%3C%21--%20crown%20%28Skansen%20Kronan%29%20--%3E%20%3Cpath%20d%3D%22M176%20262%20L170%20178%20L212%20214%20L256%20160%20L300%20214%20L342%20178%20L336%20262Z%22%20fill%3D%22%23f0b440%22/%3E%20%3Crect%20x%3D%22172%22%20y%3D%22268%22%20width%3D%22168%22%20height%3D%2222%22%20rx%3D%224%22%20fill%3D%22%23f0b440%22/%3E%20%3Ccircle%20cx%3D%22170%22%20cy%3D%22174%22%20r%3D%2211%22%20fill%3D%22%23f0b440%22/%3E%3Ccircle%20cx%3D%22256%22%20cy%3D%22154%22%20r%3D%2212%22%20fill%3D%22%23f0b440%22/%3E%3Ccircle%20cx%3D%22342%22%20cy%3D%22174%22%20r%3D%2211%22%20fill%3D%22%23f0b440%22/%3E%20%3C%21--%20waves%20%28%C3%A4lven%29%20--%3E%20%3Cg%20fill%3D%22none%22%20stroke%3D%22%23e9e4d4%22%20stroke-width%3D%2213%22%20stroke-linecap%3D%22round%22%3E%20%3Cpath%20d%3D%22M150%20326%20q26%20-18%2053%200%20t53%200%20t53%200%20t53%200%22/%3E%20%3Cpath%20d%3D%22M168%20364%20q22%20-15%2044%200%20t44%200%20t44%200%20t44%200%22%20opacity%3D%22.7%22/%3E%20%3C/g%3E%20%3C/svg%3E%20">
 <link rel="apple-touch-icon" href="icon-512.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Frontlinje GBG">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#1a1d20;font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:#e9e4d4;touch-action:none;overscroll-behavior:none}
@@ -257,6 +262,7 @@ body.touch #hudMusic{right:auto;left:calc(12px + env(safe-area-inset-left));top:
   <p>Robotarmén har landstigit vid Lilla Bommen och marscherar mot Avenyn. Håll stan mellan Avenyn, Majorna, kajen och Ullevi – och spela fotboll med GAIS. Det regnar, som vanligt.</p>
   <button class="go" id="startBtn">STARTA</button>
   <div class="menuRow"><button class="musicBtn" id="menuMusic">♪ MUSIK PÅ</button><button class="musicBtn" id="aboutBtn" data-nomusic="1">OM SPELET</button></div>
+  <button class="musicBtn" id="installBtn" data-nomusic="1" style="display:none;margin-top:10px">📲 INSTALLERA SOM APP</button>
   <div class="ctl" id="ctlDesk">
     <b>WASD</b><span>Gå</span><b>Mus</b><span>Sikta</span><b>Vänsterklick</b><span>Skjut</span>
     <b>Högerklick</b><span>Sikte (ADS)</span><b>Shift</b><span>Spring</span><b>C / Ctrl</b><span>Ducka</span><b>F</b><span>Spela fotboll – skjut bollen</span><b>E</b><span>Ge Glenn/GAIS-spelare vapen</span><b>M</b><span>Musik på/av</span>
@@ -289,7 +295,7 @@ body.touch #hudMusic{right:auto;left:calc(12px + env(safe-area-inset-left));top:
   <div class="stats" id="stats"></div>
   <button class="go" id="againBtn">SPELA IGEN</button>
 </div>
-<script>(function(){var B='1794781402';if(location.protocol.indexOf('http')!==0)return;try{fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){if(j&&j.v&&j.v!==B&&sessionStorage.getItem('gbg_reload')!==j.v){sessionStorage.setItem('gbg_reload',j.v);location.replace(location.pathname+'?v='+j.v)}}).catch(function(){})}catch(e){}})();</script>
+<script>(function(){var B='1794843634';if(location.protocol.indexOf('http')!==0)return;try{fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){if(j&&j.v&&j.v!==B&&sessionStorage.getItem('gbg_reload')!==j.v){sessionStorage.setItem('gbg_reload',j.v);location.replace(location.pathname+'?v='+j.v)}}).catch(function(){})}catch(e){}})();</script>
 <script>'use strict';
 // ================= utilities =================
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
@@ -1752,6 +1758,12 @@ document.querySelectorAll('.musicBtn:not([data-nomusic])').forEach(b=>b.addEvent
 setMusic(MUS.on);
 $('aboutBtn').addEventListener('click',()=>{$('about').classList.add('on');$('about').scrollTop=0});$('aboutBack').addEventListener('click',()=>$('about').classList.remove('on'));
 function skyFit(){const sv=document.querySelector('#menu .sky svg');if(sv)sv.setAttribute('preserveAspectRatio',innerWidth/innerHeight>1.3?'xMidYMax slice':'xMidYMax meet')}skyFit();addEventListener('resize',skyFit);
+// installable app (PWA)
+let installEvt=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installBtn').style.display='inline-block'});
+$('installBtn').addEventListener('click',async()=>{if(!installEvt)return;installEvt.prompt();try{await installEvt.userChoice}catch(e){}installEvt=null;$('installBtn').style.display='none'});
+addEventListener('appinstalled',()=>{$('installBtn').style.display='none'});
+if('serviceWorker' in navigator&&location.protocol==='https:'){addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
 requestAnimationFrame(frame);
 window.__G={kickBall,startInvasion,allyList,powerMul,recruitTarget,MUS,trams,glenn,ULLEVI,MATCH,giveWeapon,setCrouch:v=>{crouchHeld=v},setAds:v=>{adsHeld=v},fire,wn:()=>WORLD.n,step:(n)=>{for(let i=0;i<n;i++){updateGame(.033);updateFx(.033)}},P,enemies:()=>enemies,state:()=>state,begin,boxes,dbg:()=>({wave,toSpawn,inWave,breakT,free:freeCells.length,reach:flow.filter(v=>v>=0).length,pc:cellOf(P.x,P.z),time})};
 </script>

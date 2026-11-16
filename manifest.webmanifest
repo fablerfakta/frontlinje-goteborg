@@ -1,0 +1,17 @@
+{
+  "name": "Frontlinje: Göteborg",
+  "short_name": "Frontlinje GBG",
+  "description": "Ett spel där du försvarar det vackraste vi har; GAIS och Glenn Hysén.",
+  "lang": "sv",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#1a1d20",
+  "theme_color": "#1a1d20",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
