@@ -262,6 +262,7 @@ body.touch #hudMusic{right:auto;left:calc(12px + env(safe-area-inset-left));top:
   <p>Robotarmén har landstigit vid Lilla Bommen och marscherar mot Avenyn. Håll stan mellan Avenyn, Majorna, kajen och Ullevi – och spela fotboll med GAIS. Det regnar, som vanligt.</p>
   <button class="go" id="startBtn">STARTA</button>
   <div class="menuRow"><button class="musicBtn" id="menuMusic">♪ MUSIK PÅ</button><button class="musicBtn" id="aboutBtn" data-nomusic="1">OM SPELET</button></div>
+  <button class="musicBtn styleBtn" data-nomusic="1" style="margin-top:10px">🎨 STIL: TECKNAD</button>
   <button class="musicBtn" id="installBtn" data-nomusic="1" style="display:none;margin-top:10px">📲 INSTALLERA SOM APP</button>
   <div class="ctl" id="ctlDesk">
     <b>WASD</b><span>Gå</span><b>Mus</b><span>Sikta</span><b>Vänsterklick</b><span>Skjut</span>
@@ -288,6 +289,7 @@ body.touch #hudMusic{right:auto;left:calc(12px + env(safe-area-inset-left));top:
   <h1>PAUS</h1>
   <button class="go" id="resumeBtn">FORTSÄTT</button>
   <button class="musicBtn" style="margin-top:14px">♪ MUSIK PÅ</button>
+  <button class="musicBtn styleBtn" data-nomusic="1" style="margin-top:10px">🎨 STIL: TECKNAD</button>
 </div>
 <div class="scr" id="over">
   <div class="tag" id="overTag">STAN HAR FALLIT</div>
@@ -295,7 +297,7 @@ body.touch #hudMusic{right:auto;left:calc(12px + env(safe-area-inset-left));top:
   <div class="stats" id="stats"></div>
   <button class="go" id="againBtn">SPELA IGEN</button>
 </div>
-<script>(function(){var B='1794843634';if(location.protocol.indexOf('http')!==0)return;try{fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){if(j&&j.v&&j.v!==B&&sessionStorage.getItem('gbg_reload')!==j.v){sessionStorage.setItem('gbg_reload',j.v);location.replace(location.pathname+'?v='+j.v)}}).catch(function(){})}catch(e){}})();</script>
+<script>(function(){var B='1795466818';if(location.protocol.indexOf('http')!==0)return;try{fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){if(j&&j.v&&j.v!==B&&sessionStorage.getItem('gbg_reload')!==j.v){sessionStorage.setItem('gbg_reload',j.v);location.replace(location.pathname+'?v='+j.v)}}).catch(function(){})}catch(e){}})();</script>
 <script>'use strict';
 // ================= utilities =================
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
@@ -346,8 +348,8 @@ void main(){vec4 w=uM*vec4(aPos,1.);vW=w.xyz;vN=mat3(uM)*aNor;vUv=aUv;vTile=aTil
 `#version 300 es
 precision highp float;
 in vec3 vN;in vec2 vUv;in vec2 vTile;in vec4 vCol;in vec3 vW;
-uniform sampler2D uTex;uniform vec3 uSun,uSunCol,uSky,uGround,uFog,uCam,uTint,uAdd;uniform vec2 uFogR;
-out vec4 o;
+uniform sampler2D uTex;uniform vec3 uSun,uSunCol,uSky,uGround,uFog,uCam,uTint,uAdd;uniform vec2 uFogR;uniform float uToon;
+layout(location=0) out vec4 o;layout(location=1) out vec4 oN;
 void main(){
   const float T=0.125;
   vec2 f=fract(vUv);
@@ -355,12 +357,14 @@ void main(){
   vec4 tx=textureGrad(uTex,uv,dFdx(vUv)*T*0.984,dFdy(vUv)*T*0.984);
   vec3 base=tx.rgb*vCol.rgb*uTint;
   vec3 n=normalize(vN);
-  float hemi=n.y*0.5+0.5;
-  vec3 c=base*(mix(uGround,uSky,hemi)+uSunCol*max(dot(n,uSun),0.0));
-  c=mix(c,base*1.6,vCol.a)+uAdd;
+  float hemi=n.y*0.5+0.5;float dif=max(dot(n,uSun),0.0);float glow=vCol.a;
+  if(uToon>0.5){hemi=hemi<0.3?0.15:(hemi<0.72?0.55:1.0);dif=dif<0.12?0.0:(dif<0.55?0.5:1.0);
+    float warm=step(0.82,tx.r)*step(0.6,tx.g)*step(tx.b,0.72)*step(0.25,tx.r-tx.b);glow=max(glow,warm*0.9);}
+  vec3 c=base*(mix(uGround,uSky,hemi)+uSunCol*dif);
+  c=mix(c,base*(uToon>0.5?1.9:1.6),glow)+uAdd;
   float d=length(vW-uCam);
   float fg=smoothstep(uFogR.x,uFogR.y,d);
-  o=vec4(mix(c,uFog,fg),1.0);
+  o=vec4(mix(c,uFog,fg),1.0);oN=vec4(n*0.5+0.5,1.0);
 }`);
 
 const FLAT=prog(`#version 300 es
@@ -469,6 +473,35 @@ class FlatBuf{
 }
 function staticFlat(arr){const a=new Float32Array(arr);const vao=gl.createVertexArray();gl.bindVertexArray(vao);const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,a,gl.STATIC_DRAW);
   gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,28,0);gl.enableVertexAttribArray(1);gl.vertexAttribPointer(1,4,gl.FLOAT,false,28,12);gl.bindVertexArray(null);return{vao,n:a.length/7}}
+
+// ================= cel-shading (toon) post pass =================
+const OUTLINE=prog(`#version 300 es
+const vec2 P[3]=vec2[3](vec2(-1,-1),vec2(3,-1),vec2(-1,3));out vec2 vUv;void main(){vec2 p=P[gl_VertexID];vUv=p*.5+.5;gl_Position=vec4(p,0,1);}`,
+`#version 300 es
+precision highp float;in vec2 vUv;out vec4 o;uniform sampler2D uC,uN,uD;uniform vec2 uPx;uniform vec3 uLine;uniform float uNear,uFar;
+float L(vec2 uv){float z=texture(uD,uv).r*2.-1.;return 2.*uNear*uFar/(uFar+uNear-z*(uFar-uNear));}
+vec3 N(vec2 uv){return texture(uN,uv).xyz*2.-1.;}
+void main(){vec3 c=texture(uC,vUv).rgb;float raw=texture(uD,vUv).r;
+  float d0=L(vUv),dl=L(vUv-vec2(uPx.x,0.)),dr=L(vUv+vec2(uPx.x,0.)),dd=L(vUv-vec2(0.,uPx.y)),du=L(vUv+vec2(0.,uPx.y));
+  float lap=abs(dl+dr+du+dd-4.*d0)/max(d0,.1);
+  vec3 n0=N(vUv);float nd=0.;nd=max(nd,1.-dot(n0,N(vUv+vec2(uPx.x,0.))));nd=max(nd,1.-dot(n0,N(vUv-vec2(uPx.x,0.))));nd=max(nd,1.-dot(n0,N(vUv+vec2(0.,uPx.y))));nd=max(nd,1.-dot(n0,N(vUv-vec2(0.,uPx.y))));
+  float e=max(smoothstep(.035,.09,lap),smoothstep(.25,.5,nd));
+  e*=1.-smoothstep(70.,240.,d0);if(raw>=.9999)e=0.;
+  o=vec4(mix(c,uLine,e*.9),1.);}`);
+const TOON={on:true,fbo:null,tc:null,tn:null,td:null,w:0,h:0,vao:null};
+try{TOON.on=localStorage.getItem('gbg_toon')!=='0'}catch(e){}
+function toonTargets(){if(TOON.fbo&&TOON.w===canvas.width&&TOON.h===canvas.height)return;const W_=canvas.width,H_=canvas.height;TOON.w=W_;TOON.h=H_;
+  const mk=(ifmt,fmt,type)=>{const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texImage2D(gl.TEXTURE_2D,0,ifmt,W_,H_,0,fmt,type,null);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);return t};
+  for(const k of['tc','tn','td'])if(TOON[k])gl.deleteTexture(TOON[k]);if(TOON.fbo)gl.deleteFramebuffer(TOON.fbo);
+  TOON.tc=mk(gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE);TOON.tn=mk(gl.RGBA8,gl.RGBA,gl.UNSIGNED_BYTE);TOON.td=mk(gl.DEPTH_COMPONENT24,gl.DEPTH_COMPONENT,gl.UNSIGNED_INT);
+  TOON.fbo=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,TOON.fbo);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,TOON.tc,0);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT1,gl.TEXTURE_2D,TOON.tn,0);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.TEXTURE_2D,TOON.td,0);
+  if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE){TOON.on=false}
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);if(!TOON.vao)TOON.vao=gl.createVertexArray()}
+function toonComposite(){gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,canvas.width,canvas.height);gl.disable(gl.DEPTH_TEST);gl.useProgram(OUTLINE.p);
+  const u=OUTLINE.u;gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,TOON.tc);gl.uniform1i(u.uC,1);gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,TOON.tn);gl.uniform1i(u.uN,2);gl.activeTexture(gl.TEXTURE3);gl.bindTexture(gl.TEXTURE_2D,TOON.td);gl.uniform1i(u.uD,3);gl.activeTexture(gl.TEXTURE0);
+  const k=Math.max(1.3,DPR*1.1);gl.uniform2f(u.uPx,k/canvas.width,k/canvas.height);gl.uniform3f(u.uLine,.06,.07,.1);gl.uniform1f(u.uNear,.1);gl.uniform1f(u.uFar,900);
+  gl.bindVertexArray(TOON.vao);gl.drawArrays(gl.TRIANGLES,0,3);gl.enable(gl.DEPTH_TEST)}
 
 // ================= texture atlas (8x8 tiles of 256px) =================
 const atlas=document.createElement('canvas');atlas.width=atlas.height=2048;
@@ -1016,8 +1049,12 @@ const RIG=staticFlat(flatStatic);
 W.d=null;
 
 // sky dome (flat colors)
-const SKY_TOP=[.42,.47,.53],FOG=[.62,.66,.70];
+const SKY_TOP=[.42,.47,.53],FOG=[.62,.66,.70];const SKY_TOP_E=[.16,.18,.3],FOG_E=[.36,.38,.5];
 const SKY=(()=>{const a=[];const seg=24,rings=8;const C=(y)=>{const t=clamp(y,0,1);return[lerp(FOG[0],SKY_TOP[0],Math.pow(t,.6)),lerp(FOG[1],SKY_TOP[1],Math.pow(t,.6)),lerp(FOG[2],SKY_TOP[2],Math.pow(t,.6))]};
+  const P=(i,j)=>{const th=(i/rings)*Math.PI*.55-Math.PI*.05,ph=j/seg*TAU;return[Math.cos(th)*Math.sin(ph)*500,Math.sin(th)*500,Math.cos(th)*Math.cos(ph)*500]};
+  for(let i=0;i<rings;i++)for(let j=0;j<seg;j++){const q=[P(i,j),P(i,j+1),P(i+1,j+1),P(i+1,j)];for(const k of[0,1,2,0,2,3]){const p=q[k],c=C(p[1]/500);a.push(p[0],p[1],p[2],c[0],c[1],c[2],1)}}
+  return staticFlat(a)})();
+const SKY_E=(()=>{const a=[];const seg=24,rings=8;const C=(y)=>{const t=clamp(y,0,1);return[lerp(FOG_E[0],SKY_TOP_E[0],Math.pow(t,.6)),lerp(FOG_E[1],SKY_TOP_E[1],Math.pow(t,.6)),lerp(FOG_E[2],SKY_TOP_E[2],Math.pow(t,.6))]};
   const P=(i,j)=>{const th=(i/rings)*Math.PI*.55-Math.PI*.05,ph=j/seg*TAU;return[Math.cos(th)*Math.sin(ph)*500,Math.sin(th)*500,Math.cos(th)*Math.cos(ph)*500]};
   for(let i=0;i<rings;i++)for(let j=0;j<seg;j++){const q=[P(i,j),P(i,j+1),P(i+1,j+1),P(i+1,j)];for(const k of[0,1,2,0,2,3]){const p=q[k],c=C(p[1]/500);a.push(p[0],p[1],p[2],c[0],c[1],c[2],1)}}
   return staticFlat(a)})();
@@ -1426,16 +1463,20 @@ function render(dt){
   const ex=P.x+Math.cos(P.yaw)*bobX,ey=P.y+eyeH()+bobY,ez=P.z-Math.sin(P.yaw)*bobX;
   M4.view(view,ex,ey,ez,P.yaw,P.pitch+P.kick*.01);
   M4.mul(VP,proj,view);
-  gl.clearColor(FOG[0],FOG[1],FOG[2],1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  const toon=TOON.on;if(toon){toonTargets()}const F_=toon?FOG_E:FOG;
+  if(toon&&TOON.on){gl.bindFramebuffer(gl.FRAMEBUFFER,TOON.fbo);gl.drawBuffers([gl.COLOR_ATTACHMENT0,gl.COLOR_ATTACHMENT1]);gl.clearBufferfv(gl.COLOR,0,[F_[0],F_[1],F_[2],1]);gl.clearBufferfv(gl.COLOR,1,[.5,.5,.5,0]);gl.clear(gl.DEPTH_BUFFER_BIT);gl.drawBuffers([gl.COLOR_ATTACHMENT0,gl.NONE])}
+  else{gl.clearColor(F_[0],F_[1],F_[2],1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT)}
   // sky
   gl.useProgram(FLAT.p);gl.depthMask(false);
-  M4.mul(tmpM,VP,M4.compose(tmpM2,ex,ey-40,ez,0,0,1));gl.uniformMatrix4fv(FLAT.u.uVP,false,tmpM);gl.disable(gl.CULL_FACE);gl.bindVertexArray(SKY.vao);gl.drawArrays(gl.TRIANGLES,0,SKY.n);gl.enable(gl.CULL_FACE);gl.depthMask(true);
+  M4.mul(tmpM,VP,M4.compose(tmpM2,ex,ey-40,ez,0,0,1));gl.uniformMatrix4fv(FLAT.u.uVP,false,tmpM);gl.disable(gl.CULL_FACE);gl.bindVertexArray((toon?SKY_E:SKY).vao);gl.drawArrays(gl.TRIANGLES,0,SKY.n);gl.enable(gl.CULL_FACE);gl.depthMask(true);
   // world
-  gl.useProgram(LIT.p);gl.uniformMatrix4fv(LIT.u.uVP,false,VP);
-  const sun=[.35,.82,.45];const sl=Math.hypot(...sun);gl.uniform3f(LIT.u.uSun,sun[0]/sl,sun[1]/sl,sun[2]/sl);
+  if(toon&&TOON.on)gl.drawBuffers([gl.COLOR_ATTACHMENT0,gl.COLOR_ATTACHMENT1]);
+  gl.useProgram(LIT.p);gl.uniformMatrix4fv(LIT.u.uVP,false,VP);gl.uniform1f(LIT.u.uToon,toon?1:0);
+  const sun=toon?[-.55,.5,.35]:[.35,.82,.45];const sl=Math.hypot(...sun);gl.uniform3f(LIT.u.uSun,sun[0]/sl,sun[1]/sl,sun[2]/sl);
   const fl=muzzle>0?.12:0;
-  gl.uniform3f(LIT.u.uSunCol,.42,.41,.38);gl.uniform3f(LIT.u.uSky,.78+fl,.8+fl*.8,.84+fl*.5);gl.uniform3f(LIT.u.uGround,.42,.41,.4);
-  gl.uniform3f(LIT.u.uFog,FOG[0],FOG[1],FOG[2]);gl.uniform2f(LIT.u.uFogR,25,330);gl.uniform3f(LIT.u.uCam,ex,ey,ez);
+  if(toon){gl.uniform3f(LIT.u.uSunCol,.42,.3,.22);gl.uniform3f(LIT.u.uSky,.5+fl*2,.56+fl*1.4,.74+fl);gl.uniform3f(LIT.u.uGround,.24,.24,.3)}
+  else{gl.uniform3f(LIT.u.uSunCol,.42,.41,.38);gl.uniform3f(LIT.u.uSky,.78+fl,.8+fl*.8,.84+fl*.5);gl.uniform3f(LIT.u.uGround,.42,.41,.4)}
+  gl.uniform3f(LIT.u.uFog,F_[0],F_[1],F_[2]);gl.uniform2f(LIT.u.uFogR,25,330);gl.uniform3f(LIT.u.uCam,ex,ey,ez);
   gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,atlasTex);gl.uniform1i(LIT.u.uTex,0);
   drawLit(WORLD,ID);
   // Liseberg rides
@@ -1454,6 +1495,7 @@ function render(dt){
   for(const k of pickups){M4.compose(MM,k.x,.25+Math.sin(time*3+k.x)*.1,k.z,time*1.5,0,1);drawLit(CRATE,MM,[1,1,1],[.08,.08,.02])}
   for(const a of AMMO_SPOTS){if(a.cd>0||Math.hypot(a.x-P.x,a.z-P.z)>120)continue;M4.compose(MM,a.x,2.6+Math.sin(time*3+a.x)*.15,a.z,time*1.5,0,.7);drawLit(CRATE,MM,[1,1,1],[.25,.3,.05])}
   // flat fx: rigging, tracers, sparks, rain
+  if(toon&&TOON.on)gl.drawBuffers([gl.COLOR_ATTACHMENT0,gl.NONE]);
   gl.useProgram(FLAT.p);gl.uniformMatrix4fv(FLAT.u.uVP,false,VP);gl.bindVertexArray(RIG.vao);gl.drawArrays(gl.LINES,0,RIG.n);
   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
   gl.bindVertexArray(GLASS.vao);gl.drawArrays(gl.TRIANGLES,0,GLASS.n);
@@ -1465,8 +1507,9 @@ function render(dt){
   for(let i=0;i<rainN;i++){let x=rain[i*3],y=rain[i*3+1],z=rain[i*3+2];y-=dt*24;if(y<0){y+=25;x=R(-30,30);z=R(-30,30)}rain[i*3+1]=y;
     if(noRain)continue;const wx=ex+x,wz=ez+z;FX.p(wx,y+ey-8,wz,.75,.8,.86,.32);FX.p(wx+.08,y+ey-8+.55,wz,.75,.8,.86,0)}
   FX.draw(gl.LINES);gl.depthMask(true);gl.disable(gl.BLEND);
+  if(toon&&TOON.on)toonComposite();
   // weapon pass
-  gl.clear(gl.DEPTH_BUFFER_BIT);
+  gl.clear(gl.DEPTH_BUFFER_BIT);gl.useProgram(LIT.p);gl.uniform1f(LIT.u.uToon,toon?1:0);
   M4.persp(proj,(asp<1?62:55)*Math.PI/180,asp,.01,10);
   const ad=P.ads,sw=Math.sin(P.bob)*.012*(1-ad),sh=Math.abs(Math.cos(P.bob))*.01*(1-ad);
   const wx=lerp(.15,0,ad)+sw,wy=lerp(-.16,-.089,ad)-sh+(P.reloading>0?-.12*Math.sin(Math.PI*(1-P.reloading/RELOAD)):0),wz=lerp(-.2,-.1,ad)+P.kick*.035;
@@ -1764,8 +1807,10 @@ addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('in
 $('installBtn').addEventListener('click',async()=>{if(!installEvt)return;installEvt.prompt();try{await installEvt.userChoice}catch(e){}installEvt=null;$('installBtn').style.display='none'});
 addEventListener('appinstalled',()=>{$('installBtn').style.display='none'});
 if('serviceWorker' in navigator&&location.protocol==='https:'){addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
+function styleLbl(){document.querySelectorAll('.styleBtn').forEach(b=>b.textContent='🎨 STIL: '+(TOON.on?'TECKNAD':'KLASSISK'))}styleLbl();
+document.querySelectorAll('.styleBtn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();TOON.on=!TOON.on;try{localStorage.setItem('gbg_toon',TOON.on?'1':'0')}catch(_){}styleLbl()}));
 requestAnimationFrame(frame);
-window.__G={kickBall,startInvasion,allyList,powerMul,recruitTarget,MUS,trams,glenn,ULLEVI,MATCH,giveWeapon,setCrouch:v=>{crouchHeld=v},setAds:v=>{adsHeld=v},fire,wn:()=>WORLD.n,step:(n)=>{for(let i=0;i<n;i++){updateGame(.033);updateFx(.033)}},P,enemies:()=>enemies,state:()=>state,begin,boxes,dbg:()=>({wave,toSpawn,inWave,breakT,free:freeCells.length,reach:flow.filter(v=>v>=0).length,pc:cellOf(P.x,P.z),time})};
+window.__G={TOON,kickBall,startInvasion,allyList,powerMul,recruitTarget,MUS,trams,glenn,ULLEVI,MATCH,giveWeapon,setCrouch:v=>{crouchHeld=v},setAds:v=>{adsHeld=v},fire,wn:()=>WORLD.n,step:(n)=>{for(let i=0;i<n;i++){updateGame(.033);updateFx(.033)}},P,enemies:()=>enemies,state:()=>state,begin,boxes,dbg:()=>({wave,toSpawn,inWave,breakT,free:freeCells.length,reach:flow.filter(v=>v>=0).length,pc:cellOf(P.x,P.z),time})};
 </script>
 </body>
 </html>
